@@ -1632,5 +1632,30 @@ function xmldb_main_upgrade($oldversion) {
         upgrade_main_savepoint(true, 2025121900.01);
     }
 
+    if ($oldversion < 2026010900.01) {
+        // Changing the default of field showactivitydates on table course to 1.
+        $table = new xmldb_table('course');
+        $field = new xmldb_field('showactivitydates', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'originalcourseid');
+
+        // Launch change of default for field showactivitydates.
+        $dbman->change_field_default($table, $field);
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2026010900.01);
+    }
+
+    if ($oldversion < 2026010900.02) {
+        // Delete any remaining instances of qtype_random questions.
+        // At this point, such questions were created during a restore, but never used by anything (otherwise they would have
+        // been converted to question set references and deleted already), so they are all safe to delete.
+        $questions = $DB->get_records('question', ['qtype' => 'random']);
+        foreach ($questions as $question) {
+            question_delete_question($question->id);
+        }
+        // Finally, uninstall qtype_random as it's been removed.
+        uninstall_plugin('qtype', 'random');
+        upgrade_main_savepoint(true, 2026010900.02);
+    }
+
     return true;
 }
