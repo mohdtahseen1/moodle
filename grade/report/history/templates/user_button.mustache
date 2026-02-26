@@ -41,7 +41,7 @@
     }
 }}
 <div class="{{classes}}">
-    <div method="{{method}}" action="{{url}}" id="{{formid}}">
+    <form method="{{method}}" action="{{url}}" id="{{formid}}">
         {{#params}}
             <input type="hidden" name="{{name}}" value="{{value}}">
         {{/params}}
@@ -50,14 +50,5 @@
             title="{{tooltip}}"
             value="{{label}}"
             {{#disabled}}disabled{{/disabled}}>
-    </div>
+    </form>
 </div>
-{{#hasactions}}
-    {{#js}}
-        require(['core/yui'], function(Y) {
-            {{#actions}}
-                Y.on('{{event}}', {{{jsfunction}}}, '#{{id}}', null{{#jsfunctionargs}}, {{{jsfunctionargs}}}{{/jsfunctionargs}});
-            {{/actions}}
-        });
-    {{/js}}
-{{/hasactions}}

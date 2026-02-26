@@ -15,16 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details for the grade history
+ * Web service definitions for grade history report.
  *
  * @package    gradereport_history
- * @copyright  2013 NetSpot Pty Ltd (https://www.netspot.com.au)
- * @author     Adam Olley <adam.olley@netspot.com.au>
+ * @copyright  2025 onwards
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026022700;
-$plugin->requires  = 2025040800;
-$plugin->component = 'gradereport_history';
+$functions = [
+    'gradereport_history_search_users' => [
+        'classname' => 'gradereport_history\external\search_users',
+        'methodname' => 'execute',
+        'description' => 'Search for users with grade history in a course',
+        'type' => 'read',
+        'ajax' => true,
+        'loginrequired' => true,
+    ],
+];

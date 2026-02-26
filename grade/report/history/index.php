@@ -33,10 +33,10 @@ $page          = optional_param('page', 0, PARAM_INT);   // Active page.
 $showreport    = optional_param('showreport', 0, PARAM_INT);
 
 $PAGE->set_pagelayout('report');
-$url = new moodle_url('/grade/report/history/index.php', array('id' => $courseid, 'showreport' => 1));
+$url = new moodle_url('/grade/report/history/index.php', ['id' => $courseid, 'showreport' => 1]);
 $PAGE->set_url($url);
 
-$course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
 require_login($course);
 $context = context_course::instance($course->id);
 
@@ -45,23 +45,23 @@ require_capability('moodle/grade:viewall', $context);
 
 // Last selected report session tracking.
 if (!isset($USER->grade_last_report)) {
-    $USER->grade_last_report = array();
+    $USER->grade_last_report = [];
 }
 $USER->grade_last_report[$course->id] = 'history';
 
 $select = "itemtype <> 'course' AND courseid = :courseid AND " . $DB->sql_isnotempty('grade_items', 'itemname', true, true);
-$itemids = $DB->get_records_select_menu('grade_items', $select, array('courseid' => $course->id), 'itemname ASC', 'id, itemname');
+$itemids = $DB->get_records_select_menu('grade_items', $select, ['courseid' => $course->id], 'itemname ASC', 'id, itemname');
 foreach ($itemids as $itemid => $itemname) {
-    $itemids[$itemid] = format_string($itemname, false, array("context" => $context));
+    $itemids[$itemid] = format_string($itemname, false, ["context" => $context]);
 }
-$itemids = array(0 => get_string('allgradeitems', 'gradereport_history')) + $itemids;
+$itemids = [0 => get_string('allgradeitems', 'gradereport_history')] + $itemids;
 
 $output = $PAGE->get_renderer('gradereport_history');
 $graders = \gradereport_history\helper::get_graders($course->id);
 $params = ['course' => $course, 'itemids' => $itemids, 'graders' => $graders,
         'userbutton' => null, 'userfullnames' => ''];
 $mform = new \gradereport_history\filter_form(null, $params);
-$filters = array();
+$filters = [];
 if ($data = $mform->get_data()) {
     $filters = (array)$data;
 
@@ -69,7 +69,7 @@ if ($data = $mform->get_data()) {
         $filters['datetill'] += DAYSECS - 1; // Set to end of the chosen day.
     }
 } else {
-    $filters = array(
+    $filters = [
         'id' => $courseid,
         'userids' => optional_param('userids', '', PARAM_SEQUENCE),
         'itemid' => optional_param('itemid', 0, PARAM_INT),
@@ -77,12 +77,12 @@ if ($data = $mform->get_data()) {
         'datefrom' => optional_param('datefrom', 0, PARAM_INT),
         'datetill' => optional_param('datetill', 0, PARAM_INT),
         'revisedonly' => optional_param('revisedonly', 0, PARAM_INT),
-    );
+    ];
 }
 
 $table = new \gradereport_history\output\tablelog('gradereport_history', $context, $url, $filters, $download, $page);
 
-$names = array();
+$names = [];
 foreach ($table->get_selected_users() as $key => $user) {
     $names[$key] = fullname($user);
 }
@@ -119,10 +119,10 @@ if ($showreport) {
     echo $output->render($table);
 
     $event = \gradereport_history\event\grade_report_viewed::create(
-        array(
+        [
             'context' => $context,
-            'courseid' => $courseid
-        )
+            'courseid' => $courseid,
+        ]
     );
     $event->trigger();
 }
