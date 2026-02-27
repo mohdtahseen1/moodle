@@ -1,0 +1,64 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template gradereport_history/userselector_body
+
+    User selector modal body template.
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * none
+
+    Context variables required for this template:
+    * searchlabel - The search label text
+    * loadinglabel - The loading label text
+    * finishlabel - The finish button label text
+
+    Example context (json):
+    {
+        "searchlabel": "Search",
+        "loadinglabel": "Loading...",
+        "finishlabel": "Finish selecting users"
+    }
+}}
+<div class="usp-wrap">
+    <div class="usp-header">
+        <div class="usp-search" role="search">
+            <form>
+                <input type="text" class="usp-search-field form-control"
+                    aria-label="{{searchlabel}}" value="" placeholder="{{searchplaceholder}}" style="width: 250px; display: inline-block; margin-right: 5px;" />
+                <input type="submit" class="usp-search-btn btn btn-secondary"
+                    value="{{searchlabel}}">
+            </form>
+            <div aria-live="polite" class="usp-results-count">{{loadinglabel}}</div>
+        </div>
+    </div>
+    <div class="usp-content">
+        <div class="usp-select-all-wrapper" style="display: none; padding: 8px; border-bottom: 1px solid #ccc; background-color: #f9f9f9;">
+            <label style="margin: 0;">
+                <input type="checkbox" class="usp-select-all-checkbox" style="margin-right: 5px;" />
+                <span class="usp-select-all-label">{{selectalllabel}}</span>
+            </label>
+        </div>
+        <div class="usp-ajax-content" aria-live="polite"></div>
+        <div class="usp-loading-lightbox hidden">
+            {{> core/loading }}
+        </div>
+    </div>
+</div>

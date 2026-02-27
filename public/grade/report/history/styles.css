@@ -10,7 +10,8 @@
 }
 
 /* User Selector */
-.yui3-gradereport_history_usp-hidden {
+.yui3-gradereport_history_usp-hidden,
+.gradereport_history_usp .hidden {
     display: none;
 }
 

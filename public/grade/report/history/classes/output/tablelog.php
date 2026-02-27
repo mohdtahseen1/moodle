@@ -62,7 +62,7 @@ class tablelog extends \table_sql implements \renderable {
     /**
      * @var array A list of grade items present in the course.
      */
-    protected $gradeitems = array();
+    protected $gradeitems = [];
 
     /**
      * @var \course_modinfo|null A list of cm instances in course.
@@ -93,19 +93,19 @@ class tablelog extends \table_sql implements \renderable {
      * @param int $page The current page being displayed.
      * @param int $perpage Number of rules to display per page.
      */
-    public function __construct($uniqueid, \context_course $context, $url, $filters = array(), $download = '', $page = 0,
+    public function __construct($uniqueid, \context_course $context, $url, $filters = [], $download = '', $page = 0,
                                 $perpage = 100) {
         global $CFG;
         parent::__construct($uniqueid);
 
-        $this->set_attribute('class', 'gradereport_history table generaltable');
+        $this->set_attribute('class', 'gradereport_history generaltable generalbox');
 
         // Set protected properties.
         $this->context = $context;
         $this->courseid = $this->context->instanceid;
         $this->pagesize = $perpage;
         $this->currpage = $page;
-        $this->gradeitems = \grade_item::fetch_all(array('courseid' => $this->courseid));
+        $this->gradeitems = \grade_item::fetch_all(['courseid' => $this->courseid]);
         $this->cms = get_fast_modinfo($this->courseid);
         $this->useridfield = 'userid';
         $this->defaultdecimalpoints = grade_get_setting($this->courseid, 'decimalpoints', $CFG->grade_decimalpoints);
@@ -181,10 +181,10 @@ class tablelog extends \table_sql implements \renderable {
         $extrafields = \core_user\fields::get_identity_fields($this->context);
 
         // Define headers and columns.
-        $cols = array(
+        $cols = [
             'timemodified' => get_string('datetime', 'gradereport_history'),
-            'fullname' => get_string('name')
-        );
+            'fullname' => get_string('name'),
+        ];
 
         // Add headers for extra user fields.
         foreach ($extrafields as $field) {
@@ -196,7 +196,7 @@ class tablelog extends \table_sql implements \renderable {
         }
 
         // Add remaining headers.
-        $cols = array_merge($cols, array(
+        $cols = array_merge($cols, [
             'itemname' => get_string('gradeitem', 'grades'),
             'prevgrade' => get_string('gradeold', 'gradereport_history'),
             'finalgrade' => get_string('gradenew', 'gradereport_history'),
@@ -205,8 +205,8 @@ class tablelog extends \table_sql implements \renderable {
             'overridden' => get_string('overridden', 'grades'),
             'locked' => get_string('locked', 'grades'),
             'excluded' => get_string('excluded', 'gradereport_history'),
-            'feedback' => get_string('feedbacktext', 'gradereport_history')
-            )
+            'feedback' => get_string('feedbacktext', 'gradereport_history'),
+            ]
         );
 
         $this->define_columns(array_keys($cols));
@@ -283,7 +283,7 @@ class tablelog extends \table_sql implements \renderable {
             if ($history->itemtype === 'mod' && !$this->is_downloading()) {
                 if (!empty($this->cms->instances[$history->itemmodule][$history->iteminstance])) {
                     $cm = $this->cms->instances[$history->itemmodule][$history->iteminstance];
-                    $url = new \moodle_url('/mod/' . $history->itemmodule . '/view.php', array('id' => $cm->id));
+                    $url = new \moodle_url('/mod/' . $history->itemmodule . '/view.php', ['id' => $cm->id]);
                     return \html_writer::link($url, $this->gradeitems[$itemid]->get_name());
                 }
             }
@@ -314,7 +314,7 @@ class tablelog extends \table_sql implements \renderable {
         }
 
         $userid = $history->usermodified;
-        $profileurl = new \moodle_url('/user/view.php', array('id' => $userid, 'course' => $this->courseid));
+        $profileurl = new \moodle_url('/user/view.php', ['id' => $userid, 'course' => $this->courseid]);
 
         return \html_writer::link($profileurl, $name);
     }
@@ -376,7 +376,7 @@ class tablelog extends \table_sql implements \renderable {
                 $history->id
             );
 
-            return format_text($feedback, $history->feedbackformat, array('context' => $context));
+            return format_text($feedback, $history->feedbackformat, ['context' => $context]);
         }
     }
 
@@ -390,9 +390,9 @@ class tablelog extends \table_sql implements \renderable {
 
         $coursecontext = $this->context;
         $filter = 'gi.courseid = :courseid';
-        $params = array(
+        $params = [
             'courseid' => $coursecontext->instanceid,
-        );
+        ];
 
         if (!empty($this->filters->itemid)) {
             $filter .= ' AND ggh.itemid = :itemid';
@@ -406,15 +406,15 @@ class tablelog extends \table_sql implements \renderable {
         }
         if (!empty($this->filters->datefrom)) {
             $filter .= " AND ggh.timemodified >= :datefrom";
-            $params += array('datefrom' => $this->filters->datefrom);
+            $params += ['datefrom' => $this->filters->datefrom];
         }
         if (!empty($this->filters->datetill)) {
             $filter .= " AND ggh.timemodified <= :datetill";
-            $params += array('datetill' => $this->filters->datetill);
+            $params += ['datetill' => $this->filters->datetill];
         }
         if (!empty($this->filters->grader)) {
             $filter .= " AND ggh.usermodified = :grader";
-            $params += array('grader' => $this->filters->grader);
+            $params += ['grader' => $this->filters->grader];
         }
 
         // If the course is separate group mode and the current user is not allowed to see all groups make sure
@@ -427,7 +427,7 @@ class tablelog extends \table_sql implements \renderable {
             $params += $gparams;
         }
 
-        return array($filter, $params);
+        return [$filter, $params];
     }
 
     /**
@@ -479,10 +479,7 @@ class tablelog extends \table_sql implements \renderable {
                             FROM {grade_grades_history} h
                            WHERE h.itemid = ggh.itemid
                              AND h.userid = ggh.userid
-                             AND (
-                                    h.timemodified < ggh.timemodified
-                                    OR (h.timemodified = ggh.timemodified AND h.source != ggh.source AND h.id < ggh.id)
-                                 )
+                             AND h.timemodified < ggh.timemodified
                              AND NOT EXISTS (
                               SELECT 1
                                 FROM {grade_grades_history} h2
@@ -521,7 +518,7 @@ class tablelog extends \table_sql implements \renderable {
             $sql .= " ORDER BY " . $sqlsort;
         }
 
-        return array($sql, $params);
+        return [$sql, $params];
     }
 
     /**
