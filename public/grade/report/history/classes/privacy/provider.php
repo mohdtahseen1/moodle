@@ -24,8 +24,6 @@
 
 namespace gradereport_history\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for gradereport_history implementing null_provider.
  *

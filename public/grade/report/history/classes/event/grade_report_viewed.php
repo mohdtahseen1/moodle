@@ -24,8 +24,6 @@
 
 namespace gradereport_history\event;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Grade history report viewed event class.
  *

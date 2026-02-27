@@ -25,8 +25,6 @@
 
 namespace gradereport_history\output;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Renderer for history grade report.
  *

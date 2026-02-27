@@ -24,8 +24,6 @@
 
 namespace gradereport_history;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Helper class for gradehistory report.
  *
@@ -48,35 +46,28 @@ class helper {
         global $PAGE;
 
         // Load the strings for js.
-        $PAGE->requires->strings_for_js(array(
+        $PAGE->requires->strings_for_js([
             'errajaxsearch',
             'finishselectingusers',
             'foundoneuser',
             'foundnusers',
-            'loadmoreusers',
             'selectusers',
-        ), 'gradereport_history');
-        $PAGE->requires->strings_for_js(array(
-            'loading'
-        ), 'admin');
-        $PAGE->requires->strings_for_js(array(
+        ], 'gradereport_history');
+        $PAGE->requires->strings_for_js([
+            'loading',
+        ], 'admin');
+        $PAGE->requires->strings_for_js([
             'noresults',
-            'search'
-        ), 'moodle');
+            'search',
+        ], 'moodle');
 
-        $arguments = array(
-            'courseid'            => $courseid,
-            'ajaxurl'             => '/grade/report/history/users_ajax.php',
-            'url'                 => $PAGE->url->out(false),
-            'selectedUsers'       => $currentusers,
-        );
+        $arguments = [
+            'courseid' => $courseid,
+            'url'      => $PAGE->url->out(false),
+        ];
 
-        // Load the yui module.
-        $PAGE->requires->yui_module(
-            'moodle-gradereport_history-userselector',
-            'Y.M.gradereport_history.UserSelector.init',
-            array($arguments)
-        );
+        // Load the ESM module.
+        $PAGE->requires->js_call_amd('gradereport_history/userselector', 'init', [$arguments]);
     }
 
     /**
@@ -88,16 +79,16 @@ class helper {
      * @param \context $context Context of the page where the results would be shown.
      * @param string $search the text to search for (empty string = find all).
      * @param int $page page number, defaults to 0.
-     * @param int $perpage Number of entries to display per page, defaults to 0.
+     * @param int $perpage Number of entries to display per page, defaults to 0 (all results).
      *
      * @return array list of users.
      */
-    public static function get_users($context, $search = '', $page = 0, $perpage = 25) {
+    public static function get_users($context, $search = '', $page = 0, $perpage = 0) {
         global $DB;
 
-        list($sql, $params) = self::get_users_sql_and_params($context, $search);
-        $limitfrom = $page * $perpage;
-        $limitto = $limitfrom + $perpage;
+        [$sql, $params] = self::get_users_sql_and_params($context, $search, false);
+        $limitfrom = $perpage > 0 ? $page * $perpage : 0;
+        $limitto = $perpage > 0 ? $limitfrom + $perpage : 0;
         $users = $DB->get_records_sql($sql, $params, $limitfrom, $limitto);
         return $users;
     }
@@ -113,7 +104,7 @@ class helper {
     public static function get_users_count($context, $search = '') {
         global $DB;
 
-        list($sql, $params) = self::get_users_sql_and_params($context, $search, true);
+        [$sql, $params] = self::get_users_sql_and_params($context, $search, true);
         return $DB->count_records_sql($sql, $params);
 
     }
@@ -136,9 +127,9 @@ class helper {
         foreach ($userfieldsapi->get_required_fields([\core_user\fields::PURPOSE_IDENTITY]) as $field) {
             $extrafields[$field] = $userfieldssql->mappings[$field];
         }
-        $params = array();
+        $params = [];
         if (!empty($search)) {
-            list($filtersql, $params) = users_search_sql($search, 'u', USER_SEARCH_CONTAINS, $extrafields);
+            [$filtersql, $params] = users_search_sql($search, 'u', USER_SEARCH_CONTAINS, $extrafields);
             $filtersql .= ' AND ';
         } else {
             $filtersql = '';
@@ -158,9 +149,10 @@ class helper {
         $courseid = $context->instanceid;
         $groupmode = groups_get_course_groupmode(get_course($courseid));
 
-        // We're only interested in separate groups mode because it's the only group mode that requires the user to be a member of
-        // specific group(s), except when they have the 'moodle/site:accessallgroups' capability.
         if ($groupmode == SEPARATEGROUPS && !has_capability('moodle/site:accessallgroups', $context)) {
+            // We're only interested in separate groups mode because
+            // it's the only group mode that requires the user to be a member of
+            // specific group(s), except when they have the 'moodle/site:accessallgroups' capability.
             // Fetch the groups that the user can see.
             $groups = groups_get_all_groups($courseid, $USER->id, 0, 'g.id');
             // Add join condition to include users that only belong to the same group as the user.
@@ -180,7 +172,7 @@ class helper {
         $sql .= $orderby;
         $params['courseid'] = $courseid;
         $params = array_merge($userfieldssql->params, $params);
-        return array($sql, $params);
+        return [$sql, $params];
     }
 
     /**
@@ -216,8 +208,8 @@ class helper {
               GROUP BY u.id, $ufields
               ORDER BY u.lastname ASC, u.firstname ASC";
 
-        $graders = $DB->get_records_sql($sql, array('courseid' => $courseid) + $inparams);
-        $return = array(0 => get_string('allgraders', 'gradereport_history'));
+        $graders = $DB->get_records_sql($sql, ['courseid' => $courseid] + $inparams);
+        $return = [0 => get_string('allgraders', 'gradereport_history')];
         foreach ($graders as $grader) {
             $return[$grader->id] = fullname($grader);
         }

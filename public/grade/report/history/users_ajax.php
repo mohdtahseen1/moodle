@@ -31,7 +31,7 @@ $id = required_param('id', PARAM_INT); // Course id.
 $search = optional_param('search', '', PARAM_RAW);
 $page = optional_param('page', 0, PARAM_INT);
 
-$course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $id], '*', MUST_EXIST);
 $context = context_course::instance($course->id, MUST_EXIST);
 
 if ($course->id == SITEID) {
@@ -48,12 +48,12 @@ $outcome->success = true;
 $outcome->error = '';
 
 $users = \gradereport_history\helper::get_users($context, $search, $page, 25);
-$outcome->response = array('users' => array());
+$outcome->response = ['users' => []];
 $outcome->response['totalusers'] = \gradereport_history\helper::get_users_count($context, $search);;
 
 $userfieldsapi = \core_user\fields::for_identity($context)->with_userpic();
 $extrafields = $userfieldsapi->get_required_fields([\core_user\fields::PURPOSE_IDENTITY]);
-$useroptions = array('link' => false, 'visibletoscreenreaders' => false);
+$useroptions = ['link' => false, 'visibletoscreenreaders' => false];
 
 // Format the user record.
 foreach ($users as $user) {
