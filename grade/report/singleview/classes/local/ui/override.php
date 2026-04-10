@@ -58,14 +58,8 @@ class override extends grade_attribute_format implements be_checked, be_disabled
      * @return bool
      */
     public function is_disabled(): bool {
-        $lockedgrade = $lockedgradeitem = 0;
-        if (!empty($this->grade->locked)) {
-            $lockedgrade = 1;
-        }
-        if (!empty($this->grade->grade_item->locked)) {
-            $lockedgradeitem = 1;
-        }
-        return ($lockedgrade || $lockedgradeitem);
+        // Use the core lock API so cascade/locktime rules are respected.
+        return $this->grade->is_locked();
     }
 
     /**
@@ -119,7 +113,7 @@ class override extends grade_attribute_format implements be_checked, be_disabled
      * @return mixed string|false Any error message
      */
     public function set($value) {
-        if (empty($this->grade->id)) {
+        if ($this->is_disabled() || empty($this->grade->id)) {
             return false;
         }
 
