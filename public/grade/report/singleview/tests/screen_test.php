@@ -35,6 +35,69 @@ require_once($CFG->libdir . '/gradelib.php');
 final class screen_test extends \advanced_testcase {
 
     /**
+     * Test that a locked, overridden grade keeps its override flag after a singleview save.
+     *
+     * Disabled checkboxes (locked grades) do not submit a POST value; without the fix
+     * the missing value gets synthesised as false and then strips the override.
+     *
+     * @covers \gradereport_singleview\local\screen\grade::process
+     * @dataProvider locked_override_provider
+     * @param bool $lockgradeitem Whether to lock the grade_item (true) or the individual grade_grade (false).
+     */
+    public function test_locked_override_is_not_unset_on_process(bool $lockgradeitem): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course  = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($student->id, $course->id);
+
+        $record    = $this->getDataGenerator()->create_grade_item(['courseid' => $course->id]);
+        $gradeitem = \grade_item::fetch(['id' => $record->id]);
+        $gradeitem->update_final_grade($student->id, 75.0, 'unittest');
+
+        // Regrading clears needsupdate on the whole tree so that set_locked() takes immediate
+        // effect and the screen constructor's grade-verification check passes.
+        grade_regrade_final_grades($course->id);
+        $gradeitem = \grade_item::fetch(['id' => $gradeitem->id]);
+
+        $grade = \grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $student->id]);
+        $grade->set_overridden(true);
+
+        if ($lockgradeitem) {
+            $gradeitem->set_locked(1);
+        } else {
+            $grade = \grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $student->id]);
+            $grade->set_locked(1);
+        }
+
+        $screen = new \gradereport_singleview\local\screen\grade($course->id, $gradeitem->id, 0);
+
+        // Disabled checkboxes are excluded from browser POST submissions. Simulate that: the
+        // hidden oldoverride sentinel is present but the override checkbox value is absent.
+        $data = new \stdClass();
+        $data->{"oldoverride_{$gradeitem->id}_{$student->id}"} = 1;
+        ob_start();
+        $screen->process($data);
+        ob_end_clean();
+
+        $updated = \grade_grade::fetch(['itemid' => $gradeitem->id, 'userid' => $student->id]);
+        $this->assertTrue((bool) $updated->overridden, 'Override flag must not be cleared for a locked grade.');
+    }
+
+    /**
+     * Data provider for {@see test_locked_override_is_not_unset_on_process}.
+     *
+     * @return array
+     */
+    public static function locked_override_provider(): array {
+        return [
+            'grade_item locked' => [true],
+            'grade_grade locked' => [false],
+        ];
+    }
+
+    /**
      * Test load_users method.
      */
     public function test_load_users(): void {
