@@ -138,7 +138,8 @@ class badge extends base {
                     ON {$contextalias}.contextlevel = " . CONTEXT_COURSE . "
                    AND {$contextalias}.instanceid = {$badgealias}.courseid")
             ->add_fields(
-                "{$badgealias}.name, {$badgealias}.id, {$badgealias}.type, {$badgealias}.courseid, {$badgealias}.imagecaption"
+                "{$badgealias}.name, {$badgealias}.id, {$badgealias}.type, {$badgealias}.courseid,
+                {$badgealias}.imagecaption, {$badgealias}.timemodified"
             )
             ->add_fields(context_helper::get_preload_record_columns_sql($contextalias))
             ->set_is_sortable(true)
@@ -153,7 +154,14 @@ class badge extends base {
                     $context = context::instance_by_id($badge->ctxid);
                 }
 
-                $badgeimage = moodle_url::make_pluginfile_url($context->id, 'badges', 'badgeimage', $badge->id, '/', 'f2');
+                $badgeimage = moodle_url::make_pluginfile_url(
+                    $context->id,
+                    'badges',
+                    'badgeimage',
+                    $badge->id,
+                    '/' . $badge->timemodified . '/',
+                    'f2'
+                );
                 $url = new moodle_url('/badges/overview.php', ['id' => $badge->id]);
                 return html_writer::img($badgeimage, $badge->imagecaption) . ' ' . html_writer::link($url, $badge->name);
             });
@@ -204,7 +212,7 @@ class badge extends base {
             ->add_join("LEFT JOIN {context} {$contextalias}
                     ON {$contextalias}.contextlevel = " . CONTEXT_COURSE . "
                    AND {$contextalias}.instanceid = {$badgealias}.courseid")
-            ->add_fields("{$badgealias}.id, {$badgealias}.type, {$badgealias}.imagecaption")
+            ->add_fields("{$badgealias}.id, {$badgealias}.type, {$badgealias}.imagecaption, {$badgealias}.timemodified")
             ->add_fields(context_helper::get_preload_record_columns_sql($contextalias))
             ->add_callback(static function($value, stdClass $badge): string {
                 if ($value === null) {
@@ -217,7 +225,14 @@ class badge extends base {
                     $context = context::instance_by_id($badge->ctxid);
                 }
 
-                $badgeimage = moodle_url::make_pluginfile_url($context->id, 'badges', 'badgeimage', $badge->id, '/', 'f2');
+                $badgeimage = moodle_url::make_pluginfile_url(
+                    $context->id,
+                    'badges',
+                    'badgeimage',
+                    $badge->id,
+                    '/' . $badge->timemodified . '/',
+                    'f2'
+                );
                 return html_writer::img($badgeimage, $badge->imagecaption);
             });
 
